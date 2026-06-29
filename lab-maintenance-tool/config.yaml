@@ -1,0 +1,96 @@
+schedule:
+  time: 09:00
+  timezone: Asia/Kolkata
+email:
+  smtp_host: smtp.gmail.com
+  smtp_port: 587
+  use_tls: true
+  sender: lab-reports@example.com
+  recipients:
+  - team@example.com
+  subject: Lab Maintenance Status Report - YJR Devices
+  use_ses: false
+machines:
+- name: Android Perf-0
+  ip: 10.0.0.1
+  type: android
+  adb_host: true
+  hostname: ''
+  mac_address: ''
+  jenkins_node: krq-android-nft-0
+- name: Android Perf-1
+  ip: 10.0.0.2
+  type: android
+  adb_host: true
+  hostname: ''
+  mac_address: ''
+  jenkins_node: krq-android-nft-1
+- name: Android Perf-2
+  ip: 10.0.0.3
+  type: android
+  adb_host: true
+  hostname: ''
+  mac_address: ''
+  jenkins_node: krq-android-nft-2
+- name: Accessibility
+  ip: 10.0.0.4
+  type: generic
+  skip_acme: false
+  hostname: ''
+  mac_address: ''
+  jenkins_node: ''
+- name: iOS Perf-0
+  ip: 10.0.0.5
+  type: ios
+  adb_host: false
+  hostname: ''
+  mac_address: ''
+  jenkins_node: krq-ios-nft-0
+- name: iOS Perf-1
+  ip: 10.0.0.6
+  type: ios
+  adb_host: false
+  hostname: ''
+  mac_address: ''
+  jenkins_node: ''
+- name: KC
+  ip: 10.0.0.7
+  type: generic
+  skip_acme: false
+  hostname: ''
+  mac_address: ''
+  jenkins_node: ''
+ssh:
+  username: your-ssh-user
+  key_path: ~/.ssh/lab_key
+  password: 'YOUR_SSH_PASSWORD'
+  timeout: 10
+acme:
+  endpoint_template: http://{ip}:8080/acme/status
+  timeout: 5
+jenkins:
+  url: https://jenkins.example.com
+  username: ''
+  api_token: ''
+  timeout: 10
+  monitor_jobs:
+  - Android-NFT-Release
+  - iOS-NFT-Release
+  - Pegasus-3P
+restart:
+  enabled: true
+  day: tuesday
+  time: 02:00
+  reboot_hosts: false
+  wait_after_reboot: 45
+thresholds:
+  battery_min_percent: 80
+  macos_target_version: 15.7.7
+  fos_serial_pattern: ^(B0|G0|A0)
+discovery:
+  enabled: true
+  subnet: 10.0.0
+  update_config: true
+adb:
+  binary: adb
+  remote_port: 5037

@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'TestRail Analyzer Pipeline - Webhook + S3 Dashboard (Private)'
+
+Parameters:
+  TestRailUrl:
+    Type: String
+    Default: 'https://your-instance.testrail.io'
+    Description: TestRail instance URL
+  TestRailEmail:
+    Type: String
+    Default: 'your-email@example.com'
+    Description: TestRail login email
+  TestRailKey:
+    Type: String
+    NoEcho: true
+    Description: TestRail API key
+
+Resources:
+  # S3 Bucket for results + dashboard (PRIVATE - no public access)
+  ResultsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'testrail-analyzer-results-${AWS::AccountId}'
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireOldResults
+            Status: Enabled
+            ExpirationInDays: 365
+
+  # Add S3 permissions to existing Lambda role
+  LambdaS3Policy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: TestRailAnalyzerS3Access
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - 's3:PutObject'
+              - 's3:GetObject'
+              - 's3:ListBucket'
+            Resource:
+              - !GetAtt ResultsBucket.Arn
+              - !Sub '${ResultsBucket.Arn}/*'
+      Roles:
+        - 'testrail-analyzer-v5-LambdaRole-iQa2Z8yMo5Ov'
+
+Outputs:
+  BucketName:
+    Value: !Ref ResultsBucket
+    Description: S3 bucket for results (private - use pre-signed URLs or Console)
+  WebhookEndpoint:
+    Value: 'https://YOUR-API.execute-api.REGION.amazonaws.com/prod/webhook'
+    Description: Webhook URL to configure in TestRail
+  DashboardAccess:
+    Value: !Sub 'https://s3.console.aws.amazon.com/s3/buckets/${ResultsBucket}?prefix=dashboard/'
+    Description: Open dashboard via AWS Console S3 browser

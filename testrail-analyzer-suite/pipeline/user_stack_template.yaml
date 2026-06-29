@@ -1,0 +1,168 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'TestRail Analyzer - Per-User AI Stack (auto-provisioned)'
+
+Parameters:
+  OwnerAlias:
+    Type: String
+    Description: Amazon alias of the account owner
+
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'testrail-analyzer-${OwnerAlias}-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: BedrockInvoke
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource: '*'
+
+  AnalyzerFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub 'testrail-analyzer-${OwnerAlias}'
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !GetAtt LambdaRole.Arn
+      Timeout: 120
+      MemorySize: 256
+      Environment:
+        Variables:
+          OWNER_ALIAS: !Ref OwnerAlias
+          MODEL_ID: 'anthropic.claude-sonnet-4-20250514-v1:0'
+      Code:
+        ZipFile: |
+          import json, boto3, os
+          bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
+          MODEL = os.environ.get("MODEL_ID", "anthropic.claude-sonnet-4-20250514-v1:0")
+          def handler(event, context):
+              try:
+                  body = json.loads(event.get("body", "{}")) if isinstance(event.get("body"), str) else event.get("body", {})
+                  system_prompt = body.get("system", "You are a QA automation expert.")
+                  user_content = body.get("content", "")
+                  max_tokens = body.get("max_tokens", 4096)
+                  resp = bedrock.invoke_model(
+                      modelId=MODEL,
+                      contentType="application/json",
+                      accept="application/json",
+                      body=json.dumps({
+                          "anthropic_version": "bedrock-2023-05-31",
+                          "max_tokens": max_tokens,
+                          "system": system_prompt,
+                          "messages": [{"role": "user", "content": user_content}]
+                      })
+                  )
+                  result = json.loads(resp["body"].read())
+                  text = result.get("content", [{}])[0].get("text", "")
+                  # Try to parse JSON from response
+                  try:
+                      parsed = json.loads(text)
+                  except Exception:
+                      # Try to find JSON array in text
+                      import re
+                      m = re.search(r'\[.*\]', text, re.DOTALL)
+                      parsed = json.loads(m.group()) if m else {"raw": text}
+                  return {"statusCode": 200, "headers": {"Content-Type": "application/json",
+                          "Access-Control-Allow-Origin": "*"},
+                          "body": json.dumps(parsed)}
+              except Exception as e:
+                  return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
+
+  ApiGateway:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub 'testrail-analyzer-${OwnerAlias}-api'
+      Description: Per-user TestRail Analyzer AI endpoint
+
+  ApiResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: analyze
+
+  ApiMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref ApiResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AnalyzerFunction.Arn}/invocations'
+
+  LambdaApiPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AnalyzerFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*'
+
+  ApiDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: ApiMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+
+  ApiStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref ApiGateway
+      DeploymentId: !Ref ApiDeployment
+      StageName: prod
+
+  UsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    Properties:
+      UsagePlanName: !Sub 'testrail-${OwnerAlias}-plan'
+      Quota:
+        Limit: 10000
+        Period: DAY
+      Throttle:
+        RateLimit: 20
+        BurstLimit: 30
+      ApiStages:
+        - ApiId: !Ref ApiGateway
+          Stage: !Ref ApiStage
+
+  ApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Sub 'testrail-${OwnerAlias}-key'
+      Enabled: true
+
+  UsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref ApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref UsagePlan
+
+Outputs:
+  Endpoint:
+    Description: AI Endpoint URL
+    Value: !Sub 'https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/analyze'
+  ApiKeyId:
+    Description: API Key ID (use aws apigateway get-api-key to retrieve value)
+    Value: !Ref ApiKey
+  StackOwner:
+    Description: Owner alias
+    Value: !Ref OwnerAlias

@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TestRail Analyzer - AI Setup Guide</title>
+<style>
+:root{--bg:#0a0a14;--card:#12121f;--border:#2a2a45;--fg:#e8e8f0;--fg2:#8888a8;--accent:#60a5fa;--accent2:#a78bfa;--green:#34d399;--yellow:#fbbf24;--red:#f87171}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:'Segoe UI',system-ui,sans-serif;padding:40px 20px;line-height:1.7}
+.container{max-width:860px;margin:0 auto}
+h1{color:var(--accent);font-size:28px;margin-bottom:8px}
+h2{color:var(--accent2);font-size:20px;margin:40px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+h3{color:var(--green);font-size:16px;margin:24px 0 8px}
+h4{color:var(--fg);font-size:14px;margin:16px 0 6px}
+p{color:var(--fg2);margin:8px 0}
+ul,ol{color:var(--fg2);margin:8px 0 8px 24px}
+li{margin:4px 0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px;margin:16px 0}
+code{background:#1e1e35;color:var(--accent);padding:2px 8px;border-radius:4px;font-family:'Cascadia Code','Consolas',monospace;font-size:13px}
+pre{background:#1e1e35;border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;margin:12px 0}
+pre code{background:none;padding:0;display:block;color:#a5b4fc;font-size:13px;line-height:1.6}
+.step{display:flex;gap:14px;margin:16px 0;align-items:flex-start}
+.step-num{background:var(--accent);color:#fff;min-width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px;flex-shrink:0}
+.step-content{flex:1}
+.step-content strong{color:var(--fg)}
+.badge{display:inline-block;padding:3px 12px;border-radius:12px;font-size:12px;font-weight:600}
+.badge-green{background:rgba(52,211,153,0.15);color:var(--green)}
+.badge-yellow{background:rgba(251,191,36,0.15);color:var(--yellow)}
+.badge-blue{background:rgba(96,165,250,0.15);color:var(--accent)}
+.badge-red{background:rgba(248,113,113,0.15);color:var(--red)}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.warning{background:rgba(251,191,36,0.1);border-left:4px solid var(--yellow);padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0}
+.warning strong{color:var(--yellow)}
+.success{background:rgba(52,211,153,0.1);border-left:4px solid var(--green);padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0}
+.success strong{color:var(--green)}
+.error{background:rgba(248,113,113,0.1);border-left:4px solid var(--red);padding:12px 16px;border-radius:0 8px 8px 0;margin:12px 0}
+.error strong{color:var(--red)}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th{background:var(--card);color:var(--accent);text-align:left;padding:10px 12px;font-size:13px;border-bottom:2px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--fg2);font-size:14px}
+.toc{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:20px;margin:20px 0}
+.toc a{display:block;padding:4px 0;color:var(--fg2)}
+.toc a:hover{color:var(--accent)}
+.screenshot{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin:12px 0;font-family:monospace;font-size:12px;color:var(--fg2);white-space:pre;overflow-x:auto}
+img{max-width:100%;border-radius:8px;margin:8px 0}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>⚡ TestRail Analyzer - Complete AI Setup Guide</h1>
+<p>Everything you need to connect the TestRail Analyzer to an AI backend.</p>
+<p style="font-size:12px;color:var(--fg2)">Last updated: June 2026 | Version 5.0 - 2026 Edition</p>
+
+<div class="toc">
+<strong style="color:var(--accent)">📑 Table of Contents</strong>
+<a href="#overview">Overview — Which option is right for me?</a>
+<a href="#option1">Option 1: Deploy to Your AWS Account (recommended)</a>
+<a href="#option2">Option 2: Manual Endpoint Entry</a>
+<a href="#Manual_Endpoint">↳ Complete manual deployment walkthrough</a>
+<a href="#option3">Option 3: Shared Backup Endpoint</a>
+<a href="#troubleshooting">Troubleshooting</a>
+<a href="#architecture">Architecture Diagram</a>
+<a href="#faq">FAQ</a>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="overview">📋 Overview — Which Option is Right For Me?</h2>
+
+<table>
+<tr><th>Option</th><th>Who it's for</th><th>Daily Limit</th><th>Setup Time</th><th>Requires AWS?</th></tr>
+<tr><td><span class="badge badge-green">Option 1</span> Personal Deploy</td><td>Engineers with Isengard access</td><td>10,000 TC/day</td><td>~3 min</td><td>Yes</td></tr>
+<tr><td><span class="badge badge-blue">Option 2</span> Manual Entry</td><td>Teams with shared infra</td><td>Depends</td><td>~10 min</td><td>Yes</td></tr>
+<tr><td><span class="badge badge-yellow">Option 3</span> Shared Backup</td><td>Everyone</td><td>5,000 TC/day</td><td>1 click</td><td>No</td></tr>
+</table>
+
+<div class="warning">
+<strong>Don't have an AWS account?</strong> Use Option 3 (Shared Backup) immediately — zero setup needed.
+Ask your manager to create an Isengard account for you, then upgrade to Option 1.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="option1">🚀 Option 1: Deploy to Your AWS Account (Automated)</h2>
+<p>The tool's <strong>⚡ Setup My AI</strong> button automates this. But here's what happens under the hood:</p>
+
+<h3>Prerequisites</h3>
+<table>
+<tr><th>Tool</th><th>Install Command</th><th>Verify</th></tr>
+<tr><td>AWS CLI</td><td><code>msiexec /i https://awscli.amazonaws.com/AWSCLIV2.msi</code></td><td><code>aws --version</code></td></tr>
+<tr><td>ada (credentials)</td><td><code>toolbox install ada</code></td><td><code>ada --version</code></td></tr>
+<tr><td>AWS Account</td><td><a href="https://isengard.amazon.com/manage-accounts">Create at Isengard</a></td><td>12-digit ID</td></tr>
+</table>
+
+<h3>Steps</h3>
+
+<div class="step">
+<div class="step-num">1</div>
+<div class="step-content">
+<strong>Create an AWS Account via Isengard</strong>
+<p>Go to <a href="https://isengard.amazon.com/manage-accounts" target="_blank">isengard.amazon.com/manage-accounts</a></p>
+<ol>
+<li>Click <strong>"Create Account"</strong></li>
+<li>Account Type: <strong>Personal</strong></li>
+<li>Account Name: <code>testrail-ai-youralias</code></li>
+<li>Email: <code>youralias+testrail@amazon.com</code></li>
+<li>Click Create → Wait 30 seconds</li>
+<li>Note the <strong>12-digit Account ID</strong> (e.g., <code>123456789012</code>)</li>
+</ol>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">2</div>
+<div class="step-content">
+<strong>Get Admin Credentials</strong>
+<pre><code>ada credentials update --account=123456789012 --role=Admin --once</code></pre>
+<p>Verify it worked:</p>
+<pre><code>aws sts get-caller-identity</code></pre>
+<p>You should see your Account ID and ARN.</p>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">3</div>
+<div class="step-content">
+<strong>Enable Bedrock Model Access</strong>
+<ol>
+<li>Open <a href="https://console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess" target="_blank">AWS Console → Bedrock → Model Access</a></li>
+<li>Click <strong>"Manage model access"</strong></li>
+<li>Check the box for <strong>Anthropic → Claude 3.5 Sonnet</strong></li>
+<li>Click <strong>"Request model access"</strong></li>
+<li>Wait ~1 minute for "Access granted" status</li>
+</ol>
+</div>
+</div>
+
+<div class="step">
+<div class="step-num">4</div>
+<div class="step-content">
+<strong>Deploy via the Tool</strong>
+<p>In TestRail Analyzer → Click <strong>⚡ Setup My AI</strong> → Enter Account ID → Click <strong>Deploy</strong></p>
+<p>The tool runs CloudFormation automatically. Takes ~90 seconds.</p>
+</div>
+</div>
+
+<div class="success">
+<strong>✅ Done!</strong> Your personal AI endpoint is active. 10,000 req/day, no sharing.
+Config is saved — next launch it loads automatically.
+</div>
+
+<!-- ============================================================ -->
+<h2 id="option2">✏️ Option 2: Manual Endpoint Entry</h2>
+<p>Use this when you already have an endpoint from a teammate, or want to deploy manually.</p>
+
+<h3>If you already have an endpoint</h3>
+<p>Just paste these two values in the Setup popup → Option 2:</p>
+<div class="card">
+<strong>Endpoint URL:</strong> <code>https://XXXXXXXXXX.execute-api.us-east-1.amazonaws.com/prod/analyze</code><br><br>
+<strong>API Key:</strong> <code>aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789abcd</code>
+</div>
+
+<!-- ============================================================ -->
+<h2 id="Manual_Endpoint">🔧 Complete Manual Deployment (Step-by-Step)</h2>
+<p>Follow this if you want to deploy the AI backend yourself without the tool's auto-deploy.</p>
+
+<h3>Prerequisites</h3>
+<ul>
+<li>AWS CLI installed and configured</li>
+<li>Admin credentials for an AWS account</li>
+<li>Bedrock model access enabled (see Option 1, Step 3 above)</li>
+</ul>
+
+<h3>Step 1: Verify AWS Access</h3>
+<pre><code># Check you're authenticated
+aws sts get-caller-identity --region us-east-1
+
+# Expected output:
+# {
+#     "UserId": "AROAXXXXXXXXXXXXXXXXX:youralias",
+#     "Account": "123456789012",
+#     "Arn": "arn:aws:sts::123456789012:assumed-role/Admin/youralias"
+# }</code></pre>
+
+<div class="warning">
+<strong>If this fails:</strong> Run <code>ada credentials update --account=YOUR_ACCOUNT_ID --role=Admin --once</code>
+</div>
+
+<h3>Step 2: Create the Lambda Function</h3>
+
+<h4>2a. Create IAM Role</h4>
+<pre><code># Create trust policy file
+cat > trust-policy.json &lt;&lt; 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {"Service": "lambda.amazonaws.com"},
+    "Action": "sts:AssumeRole"
+  }]
+}
+EOF
+
+# Create the role
+aws iam create-role \
+  --role-name testrail-analyzer-lambda-role \
+  --assume-role-policy-document file://trust-policy.json
+
+# Attach basic Lambda execution policy
+aws iam attach-role-policy \
+  --role-name testrail-analyzer-lambda-role \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+# Create Bedrock access policy
+cat > bedrock-policy.json &lt;&lt; 'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
+    "Resource": "*"
+  }]
+}
+EOF
+
+aws iam put-role-policy \
+  --role-name testrail-analyzer-lambda-role \
+  --policy-name BedrockInvoke \
+  --policy-document file://bedrock-policy.json
+
+# Wait for role to propagate
+echo "Waiting 10 seconds for IAM role to propagate..."
+sleep 10</code></pre>
+
+<h4>2b. Create Lambda Function Code</h4>
+<pre><code># Create the Lambda handler file
+cat > index.py &lt;&lt; 'EOF'
+import json, boto3, os, re
+
+bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
+MODEL = os.environ.get("MODEL_ID", "anthropic.claude-sonnet-4-20250514-v1:0")
+
+def handler(event, context):
+    try:
+        body = json.loads(event.get("body", "{}")) if isinstance(event.get("body"), str) else event.get("body", {})
+
+        # Support both formats: direct (system/content) and wrapped (systemPrompt/userPrompt)
+        system_prompt = body.get("system") or body.get("systemPrompt", "You are a QA automation expert.")
+        user_content = body.get("content") or body.get("userPrompt", "")
+        max_tokens = body.get("max_tokens") or body.get("maxTokens", 4096)
+
+        resp = bedrock.invoke_model(
+            modelId=MODEL,
+            contentType="application/json",
+            accept="application/json",
+            body=json.dumps({
+                "anthropic_version": "bedrock-2023-05-31",
+                "max_tokens": int(max_tokens),
+                "system": system_prompt,
+                "messages": [{"role": "user", "content": user_content}]
+            })
+        )
+        result = json.loads(resp["body"].read())
+        text = result.get("content", [{}])[0].get("text", "")
+
+        # Try to parse JSON from response
+        try:
+            parsed = json.loads(text)
+        except Exception:
+            m = re.search(r'\[.*\]', text, re.DOTALL)
+            if m:
+                parsed = json.loads(m.group())
+            else:
+                parsed = {"raw": text}
+
+        # Wrap in results array if it's a list
+        if isinstance(parsed, list):
+            response_body = {"results": parsed}
+        else:
+            response_body = parsed
+
+        return {
+            "statusCode": 200,
+            "headers": {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
+            "body": json.dumps(response_body)
+        }
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps({"error": str(e)})
+        }
+EOF
+
+# Package it
+zip function.zip index.py</code></pre>
+
+<h4>2c. Deploy Lambda</h4>
+<pre><code># Get your account ID
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
+# Create the function
+aws lambda create-function \
+  --function-name testrail-analyzer \
+  --runtime python3.12 \
+  --handler index.handler \
+  --role arn:aws:iam::${ACCOUNT_ID}:role/testrail-analyzer-lambda-role \
+  --zip-file fileb://function.zip \
+  --timeout 120 \
+  --memory-size 256 \
+  --environment "Variables={MODEL_ID=anthropic.claude-sonnet-4-20250514-v1:0}" \
+  --region us-east-1
+
+# Verify it was created
+aws lambda get-function --function-name testrail-analyzer --region us-east-1 --query "Configuration.FunctionArn"</code></pre>
+
+<div class="success">
+<strong>✅ Lambda created!</strong> Now we need API Gateway to expose it as an HTTPS endpoint.
+</div>
+
+<h3>Step 3: Create API Gateway</h3>
+
+<h4>3a. Create REST API</h4>
+<pre><code># Create the API
+API_ID=$(aws apigateway create-rest-api \
+  --name "testrail-analyzer-api" \
+  --description "TestRail Analyzer AI endpoint" \
+  --region us-east-1 \
+  --query "id" --output text)
+
+echo "API ID: $API_ID"
+
+# Get root resource ID
+ROOT_ID=$(aws apigateway get-resources \
+  --rest-api-id $API_ID \
+  --region us-east-1 \
+  --query "items[?path=='/'].id" --output text)
+
+echo "Root Resource ID: $ROOT_ID"</code></pre>
+
+<h4>3b. Create /analyze Resource + POST Method</h4>
+<pre><code># Create /analyze resource
+RESOURCE_ID=$(aws apigateway create-resource \
+  --rest-api-id $API_ID \
+  --parent-id $ROOT_ID \
+  --path-part "analyze" \
+  --region us-east-1 \
+  --query "id" --output text)
+
+echo "Resource ID: $RESOURCE_ID"
+
+# Create POST method with API key required
+aws apigateway put-method \
+  --rest-api-id $API_ID \
+  --resource-id $RESOURCE_ID \
+  --http-method POST \
+  --authorization-type NONE \
+  --api-key-required \
+  --region us-east-1
+
+# Get account ID and region for Lambda ARN
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+LAMBDA_ARN="arn:aws:lambda:us-east-1:${ACCOUNT_ID}:function:testrail-analyzer"
+
+# Create Lambda integration
+aws apigateway put-integration \
+  --rest-api-id $API_ID \
+  --resource-id $RESOURCE_ID \
+  --http-method POST \
+  --type AWS_PROXY \
+  --integration-http-method POST \
+  --uri "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/${LAMBDA_ARN}/invocations" \
+  --region us-east-1</code></pre>
+
+<h4>3c. Grant API Gateway Permission to Invoke Lambda</h4>
+<pre><code>aws lambda add-permission \
+  --function-name testrail-analyzer \
+  --statement-id apigateway-invoke \
+  --action lambda:InvokeFunction \
+  --principal apigateway.amazonaws.com \
+  --source-arn "arn:aws:execute-api:us-east-1:${ACCOUNT_ID}:${API_ID}/*" \
+  --region us-east-1</code></pre>
+
+<h4>3d. Deploy API to "prod" Stage</h4>
+<pre><code># Create deployment
+aws apigateway create-deployment \
+  --rest-api-id $API_ID \
+  --stage-name prod \
+  --region us-east-1
+
+echo ""
+echo "========================================="
+echo "YOUR ENDPOINT URL:"
+echo "https://${API_ID}.execute-api.us-east-1.amazonaws.com/prod/analyze"
+echo "========================================="</code></pre>
+
+<div class="success">
+<strong>✅ API Gateway deployed!</strong> Your endpoint URL is ready. Now create an API key.
+</div>
+
+<h3>Step 4: Create API Key + Usage Plan</h3>
+
+<h4>4a. Create Usage Plan (rate limiting)</h4>
+<pre><code># Create usage plan with 10,000 requests/day
+PLAN_ID=$(aws apigateway create-usage-plan \
+  --name "testrail-analyzer-plan" \
+  --throttle "rateLimit=20,burstLimit=30" \
+  --quota "limit=10000,period=DAY" \
+  --api-stages "apiId=${API_ID},stage=prod" \
+  --region us-east-1 \
+  --query "id" --output text)
+
+echo "Usage Plan ID: $PLAN_ID"</code></pre>
+
+<h4>4b. Create API Key</h4>
+<pre><code># Create the key
+KEY_ID=$(aws apigateway create-api-key \
+  --name "testrail-analyzer-key" \
+  --enabled \
+  --region us-east-1 \
+  --query "id" --output text)
+
+echo "API Key ID: $KEY_ID"
+
+# Associate key with usage plan
+aws apigateway create-usage-plan-key \
+  --usage-plan-id $PLAN_ID \
+  --key-id $KEY_ID \
+  --key-type API_KEY \
+  --region us-east-1
+
+# Get the actual API key value
+API_KEY=$(aws apigateway get-api-key \
+  --api-key $KEY_ID \
+  --include-value \
+  --region us-east-1 \
+  --query "value" --output text)
+
+echo ""
+echo "========================================="
+echo "YOUR API KEY:"
+echo "$API_KEY"
+echo "========================================="</code></pre>
+
+<div class="success">
+<strong>✅ All done! Copy these two values into the tool:</strong>
+</div>
+
+<h3>Step 5: Apply to TestRail Analyzer</h3>
+
+<div class="card">
+<strong>Copy these into the tool (Setup My AI → Option 2: Manual Entry):</strong><br><br>
+<strong>Endpoint:</strong><br>
+<code>https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/prod/analyze</code><br><br>
+<strong>API Key:</strong><br>
+<code>YOUR_API_KEY_VALUE</code>
+</div>
+
+<h3>Step 6: Test It</h3>
+<pre><code># Quick test from command line
+curl -X POST "https://${API_ID}.execute-api.us-east-1.amazonaws.com/prod/analyze" \
+  -H "Content-Type: application/json" \
+  -H "X-Api-Key: ${API_KEY}" \
+  -d '{
+    "systemPrompt": "You are a QA expert. Respond with JSON.",
+    "userPrompt": "Is this test automatable? Title: Verify login button works",
+    "maxTokens": 500
+  }'
+
+# Expected: JSON response with analysis</code></pre>
+
+<h3>Quick Reference: Get Values from Existing Stack</h3>
+<p>If you already deployed via the tool and need to retrieve your endpoint/key:</p>
+<pre><code># Get endpoint
+aws cloudformation describe-stacks \
+  --stack-name testrail-analyzer-youralias \
+  --region us-east-1 \
+  --query "Stacks[0].Outputs[?OutputKey=='Endpoint'].OutputValue" \
+  --output text
+
+# Get API Key ID
+KEY_ID=$(aws cloudformation describe-stacks \
+  --stack-name testrail-analyzer-youralias \
+  --region us-east-1 \
+  --query "Stacks[0].Outputs[?OutputKey=='ApiKeyId'].OutputValue" \
+  --output text)
+
+# Get actual key value
+aws apigateway get-api-key \
+  --api-key $KEY_ID \
+  --include-value \
+  --region us-east-1 \
+  --query "value" --output text</code></pre>
+
+<!-- ============================================================ -->
+<h2 id="option3">🔄 Option 3: Shared Backup Endpoint</h2>
+
+<p>This requires <strong>zero setup</strong>. Click "🔄 Use Shared" in the Setup popup.</p>
+
+<div class="card">
+<strong>How it works:</strong>
+<ul>
+<li>Connects to a team-managed AWS account</li>
+<li>Shared across all users of the tool</li>
+<li>Daily quota: <strong>5,000 test cases</strong></li>
+<li>Quota resets at <strong>12:00 AM IST</strong> (6:30 PM UTC)</li>
+</ul>
+</div>
+
+<div class="warning">
+<strong>⚠️ When the limit is reached:</strong><br>
+The tool will show: <em>"DAILY LIMIT REACHED (5,000 TC/day). Please try again tomorrow after 12:00 AM IST."</em><br>
+It automatically switches to <strong>heuristic-only mode</strong> — your analysis still completes, just without AI deep analysis for remaining TCs.
+</div>
+
+<h3>Upgrading from Shared to Personal</h3>
+<ol>
+<li>Click <strong>❌ Clear</strong> in the AI ENGINE section</li>
+<li>Click <strong>⚡ Setup My AI</strong></li>
+<li>Follow Option 1 or 2 to connect your personal endpoint</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2 id="troubleshooting">❓ Troubleshooting</h2>
+
+<table>
+<tr><th>Error</th><th>Cause</th><th>Solution</th></tr>
+<tr><td><code>AWS CLI not found</code></td><td>AWS CLI not installed</td><td>Install: <code>msiexec /i https://awscli.amazonaws.com/AWSCLIV2.msi</code></td></tr>
+<tr><td><code>Account not found</code></td><td>Wrong account ID or not in Isengard</td><td>Verify at <a href="https://isengard.amazon.com/manage-accounts">isengard.amazon.com</a></td></tr>
+<tr><td><code>Access Denied / ExpiredToken</code></td><td>Credentials expired</td><td><code>ada credentials update --account=ID --role=Admin --once</code></td></tr>
+<tr><td><code>Bedrock model not available</code></td><td>Model access not enabled</td><td>AWS Console → Bedrock → Model Access → Enable Claude</td></tr>
+<tr><td><code>429 Rate Limited</code></td><td>Daily quota exhausted</td><td>Wait until 12 AM IST, or deploy personal endpoint</td></tr>
+<tr><td><code>Only AWS Employees can register</code></td><td>Account type restriction</td><td>Ask your manager to create an Isengard account for you</td></tr>
+<tr><td><code>Deploy failed: ROLLBACK_COMPLETE</code></td><td>Previous failed stack exists</td><td><code>aws cloudformation delete-stack --stack-name NAME</code> then retry</td></tr>
+<tr><td><code>504 Gateway Timeout</code></td><td>Lambda took too long</td><td>Tool auto-retries. If persistent, reduce batch size</td></tr>
+<tr><td><code>[WinError 2] File not found</code></td><td>CLI tool not in PATH</td><td>Close & reopen terminal after installing tools</td></tr>
+<tr><td><code>No module named 'boto3'</code></td><td>Lambda missing SDK</td><td>boto3 is included in Lambda Python 3.12 runtime by default</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2 id="architecture">📊 Architecture</h2>
+
+<pre><code>
+┌─────────────────────┐         HTTPS POST          ┌──────────────────────────────────┐
+│                     │    X-Api-Key: xxxxx          │         YOUR AWS ACCOUNT          │
+│   TestRail          │─────────────────────────────▶│                                  │
+│   Analyzer          │                              │  ┌─────────────────────────────┐ │
+│   (Desktop App)     │◀─────────────────────────────│  │  API Gateway               │ │
+│                     │      JSON Response           │  │  POST /prod/analyze         │ │
+└─────────────────────┘                              │  │  (API Key + Usage Plan)     │ │
+                                                     │  └──────────────┬──────────────┘ │
+                                                     │                 │                 │
+                                                     │                 ▼                 │
+                                                     │  ┌─────────────────────────────┐ │
+                                                     │  │  Lambda Function            │ │
+                                                     │  │  Python 3.12 / 256MB / 2min │ │
+                                                     │  └──────────────┬──────────────┘ │
+                                                     │                 │                 │
+                                                     │                 ▼                 │
+                                                     │  ┌─────────────────────────────┐ │
+                                                     │  │  Amazon Bedrock             │ │
+                                                     │  │  Claude Sonnet 4            │ │
+                                                     │  │  (AI Analysis Engine)       │ │
+                                                     │  └─────────────────────────────┘ │
+                                                     └──────────────────────────────────┘
+
+Cost: ~$0.005 per test case analyzed (Bedrock token pricing)
+      Lambda + API Gateway: effectively free at this scale
+</code></pre>
+
+<!-- ============================================================ -->
+<h2 id="faq">💬 FAQ</h2>
+
+<h4>Q: Is the shared endpoint secure?</h4>
+<p>Yes. It uses API key authentication. The key is stored in your Windows Credential Manager (via keyring), not in plain text files.</p>
+
+<h4>Q: Can I share my personal endpoint with teammates?</h4>
+<p>Yes — give them your Endpoint URL + API Key. They can paste it in Option 2 (Manual Entry). But they'll share your 10,000/day quota.</p>
+
+<h4>Q: What happens if AI is unavailable?</h4>
+<p>The tool automatically falls back to <strong>heuristic-only mode</strong>. It still produces results using keyword matching, step analysis, and pattern detection — just without the AI deep reasoning layer.</p>
+
+<h4>Q: How much does a personal endpoint cost?</h4>
+<table>
+<tr><th>Resource</th><th>Cost for 1000 TCs</th><th>Cost for 5000 TCs</th></tr>
+<tr><td>Bedrock (Claude)</td><td>~$2.50</td><td>~$12.50</td></tr>
+<tr><td>Lambda</td><td>~$0.01</td><td>~$0.05</td></tr>
+<tr><td>API Gateway</td><td>~$0.003</td><td>~$0.015</td></tr>
+<tr><td><strong>Total (first run)</strong></td><td><strong>~$2.51</strong></td><td><strong>~$12.57</strong></td></tr>
+<tr><td><strong>Subsequent runs</strong></td><td colspan="2"><strong>Near $0</strong> (incremental — only new/changed TCs cost)</td></tr>
+</table>
+
+<h4>Q: How do I delete my personal stack?</h4>
+<pre><code>aws cloudformation delete-stack \
+  --stack-name testrail-analyzer-youralias \
+  --region us-east-1</code></pre>
+<p>This removes Lambda, API Gateway, and all associated resources. Zero residual cost.</p>
+
+<h4>Q: Can I use a different AI model?</h4>
+<p>Yes. Change the <code>MODEL_ID</code> environment variable on your Lambda function:</p>
+<pre><code>aws lambda update-function-configuration \
+  --function-name testrail-analyzer \
+  --environment "Variables={MODEL_ID=anthropic.claude-3-haiku-20240307-v1:0}" \
+  --region us-east-1</code></pre>
+<p>Supported: <code>claude-sonnet-4-20250514-v1:0</code> (best), <code>claude-3-haiku</code> (faster/cheaper)</p>
+
+<p style="margin-top:60px;padding-top:20px;border-top:1px solid var(--border);color:var(--fg2);font-size:12px;text-align:center">
+TestRail Analyzer - 2026 Edition | AI Setup Guide v1.0<br>
+For questions: Contact your team's TestRail Analyzer admin
+</p>
+
+</div>
+</body>
+</html>
